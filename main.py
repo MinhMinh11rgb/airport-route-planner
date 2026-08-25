@@ -60,6 +60,41 @@ def distance_between(code1, code2, airports):
     return harvensine_distance(lat1, lon1, lat2, lon2)
 
 
+def bfs_min_stops(graph, source, destination):
+    if source == destination:
+        return [source]
+    queue = [source]
+    head = 0
+    visited = {source}
+    parent = {}
+
+    while head < len(queue):
+        current = queue[head]
+        head += 1
+        if current == destination:
+            return reconstruct_path(parent,source,destination)
+            
+
+        for neighbor in graph.get(current,set()):
+            if neighbor not in visited:
+                visited.add(neighbor)
+                parent[neighbor] = current
+                queue.append(neighbor)
+
+    return None
+
+
+def reconstruct_path(parent, source, destination):
+    path = [destination]
+    while path[-1] != source:
+        path.append(parent[path[-1]])
+
+    path.reverse()
+    return path
+
+    
+
+
 
 
 airports = load_airports(airportPath)
@@ -67,9 +102,10 @@ graph = load_routes(routePath, airports)
 
 
 print(len(airports))
-print(airports.get("SGN"))
+print(airports.get("JFK"))
 
 print(len(graph))
 print(graph.get("SGN"))
 
 print(distance_between("SGN", "SYD", airports))
+print(bfs_min_stops(graph,"SGN","JFK"))
