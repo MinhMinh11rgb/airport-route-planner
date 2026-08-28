@@ -83,6 +83,47 @@ def bfs_min_stops(graph, source, destination):
 
     return None
 
+def dijkstra_shortest_distance(graph, airports, source, destination):
+    if source == destination:
+        return [source]
+
+    distance = {source: 0}
+    visited = set()
+    parent = {}
+  
+
+    while True:
+        smallest = None
+        current = None
+        for code, dist in distance.items():
+            if code in visited:
+                continue
+            if smallest is none or dist < smallest:
+                current = code
+                smallest = dist
+        if current is None:
+            break
+
+        visited.add(current)
+
+        if current == destination:
+            break
+
+        for neighbor in graph.get(current, set()):
+            if neighbor in visited:
+                continue
+            tentative_distance = distance[current] + distance_between(current,neighbor, airports)
+            if neighbor not in distance or tentative_distance < distance[neighbor]:
+                distance[neighbor] = tentative_distance
+                parent[neighbor] = current
+
+    if destination not in distance:
+        return None
+
+    return reconstruct_path(parent, source , destination)
+
+
+
 
 def reconstruct_path(parent, source, destination):
     path = [destination]
