@@ -149,43 +149,48 @@ def path_total_distance(path, airports):
 airports = load_airports(airportPath)
 graph = load_routes(routePath, airports)
 
-source = input("Enter source airport code:")
-destination = input("Enter destination airport code:")
+while True:
+    source = input("Enter source airport code (or 'q' to quit):")
+    if source.lower() == "q":
+        break
+    destination = input("Enter destination airport code:")
 
-start_time = time.perf_counter()
-path = bfs_min_stops(graph, source, destination)
-elapsed = time.perf_counter() - start_time
+    start_time = time.perf_counter()
+    path = bfs_min_stops(graph, source, destination)
+    elapsed = time.perf_counter() - start_time
 
-print("Minimum-stop route:")
-if path is None:
-    print(f"  No route found between {source} and {destination}")
-else:
-    num_flights = len(path) - 1
-    num_stops = len(path) - 2
-    total_distance = path_total_distance(path, airports)
+    print("Minimum-stop route:")
+    if path is None:
+        print(f"  No route found between {source} and {destination}")
+    else:
+        num_flights = len(path) - 1
+        num_stops = len(path) - 2
+        total_distance = path_total_distance(path, airports)
 
-    print(f"  Route: {' -> '.join(path)}")
-    print(f"  Number of flights: {num_flights}")
-    print(f"  Number of intermediate stops: {num_stops}")
-    print(f"  Total estimated distance: {total_distance:,.0f} km")
-    print(f"  Running time: {elapsed:.4f} seconds")
+        print(f"  Route: {' -> '.join(path)}")
+        print(f"  Number of flights: {num_flights}")
+        print(f"  Number of intermediate stops: {num_stops}")
+        print(f"  Total estimated distance: {total_distance:,.0f} km")
+        print(f"  Running time: {elapsed:.4f} seconds")
 
-start_time = time.perf_counter()
-dijkstra_path = dijkstra_shortest_distance(graph, airports, source, destination)
-dijkstra_elapsed = time.perf_counter() - start_time
+    start_time = time.perf_counter()
+    dijkstra_path = dijkstra_shortest_distance(graph, airports, source, destination)
+    dijkstra_elapsed = time.perf_counter() - start_time
 
-print("Shortest-distance route:")
-if dijkstra_path is None:
-    print(f"  No route found between {source} and {destination}")
-else:
-    dijkstra_num_flights = len(dijkstra_path) - 1
-    dijkstra_num_stops = len(dijkstra_path) - 2
-    dijkstra_total_distance = path_total_distance(dijkstra_path, airports)
+    print("Shortest-distance route:")
+    if dijkstra_path is None:
+        print(f"  No route found between {source} and {destination}")
+    else:
+        dijkstra_num_flights = len(dijkstra_path) - 1
+        dijkstra_num_stops = len(dijkstra_path) - 2
+        dijkstra_total_distance = path_total_distance(dijkstra_path, airports)
 
-    print(f"  Route: {' -> '.join(dijkstra_path)}")
-    print(f"  Number of flights: {dijkstra_num_flights}")
-    print(f"  Number of intermediate stops: {dijkstra_num_stops}")
-    print(f"  Total estimated distance: {dijkstra_total_distance:,.0f} km")
-    print(f"  Running time: {dijkstra_elapsed:.4f} seconds")
+        print(f"  Route: {' -> '.join(dijkstra_path)}")
+        print(f"  Number of flights: {dijkstra_num_flights}")
+        print(f"  Number of intermediate stops: {dijkstra_num_stops}")
+        print(f"  Total estimated distance: {dijkstra_total_distance:,.0f} km")
+        print(f"  Running time: {dijkstra_elapsed:.4f} seconds")
+
+    print()
 
 
