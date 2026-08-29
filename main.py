@@ -155,6 +155,11 @@ while True:
         break
     destination = input("Enter destination airport code:")
 
+    if source not in airports or destination not in airports:
+        print("Invalid airport code: enter a valid 3-letter IATA code that exists in the dataset.")
+        print()
+        continue
+
     start_time = time.perf_counter()
     path = bfs_min_stops(graph, source, destination)
     elapsed = time.perf_counter() - start_time
