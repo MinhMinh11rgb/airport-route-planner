@@ -1,4 +1,5 @@
 import csv
+import heapq
 import math
 import time
 airportPath = "data/airports.dat"
@@ -124,6 +125,46 @@ def dijkstra_shortest_distance(graph, airports, source, destination):
     return reconstruct_path(parent, source , destination)
 
 
+# ==============================================================================
+# OPTIMIZATION COMPARISON (dev-only) - heapq-based Dijkstra vs. our linear-scan
+# Dijkstra. Delete or comment out this entire block before publishing.
+# ==============================================================================
+
+def dijkstra_shortest_distance_heap(graph, airports, source, destination):
+    if source == destination:
+        return [source]
+
+    distance = {source: 0}
+    parent = {}
+    visited = set()
+    heap = [(0, source)]
+
+    while heap:
+        dist_u, u = heapq.heappop(heap)
+        if u in visited:
+            continue
+        visited.add(u)
+
+        if u == destination:
+            break
+
+        for neighbor in graph.get(u, set()):
+            if neighbor in visited:
+                continue
+            new_dist = dist_u + distance_between(u, neighbor, airports)
+            if neighbor not in distance or new_dist < distance[neighbor]:
+                distance[neighbor] = new_dist
+                parent[neighbor] = u
+                heapq.heappush(heap, (new_dist, neighbor))
+
+    if destination not in distance:
+        return None
+
+    return reconstruct_path(parent, source, destination)
+
+# ==============================================================================
+# END OPTIMIZATION COMPARISON block (function definition)
+# ==============================================================================
 
 
 def reconstruct_path(parent, source, destination):
@@ -196,6 +237,25 @@ while True:
         print(f"  Total estimated distance: {dijkstra_total_distance:,.0f} km")
         print(f"  Running time: {dijkstra_elapsed:.4f} seconds")
 
-    print()
+    # ==========================================================================
+    # OPTIMIZATION COMPARISON - heapq-based Dijkstra vs. our
+    # linear-scan Dijkstra above. Uncomment this block to test the comparison. 
+    # ==========================================================================
+    # heap_start_time = time.perf_counter()
+    # heap_path = dijkstra_shortest_distance_heap(graph, airports, source, destination)
+    # heap_elapsed = time.perf_counter() - heap_start_time
 
+    # print("Shortest-distance route (heapq Dijkstra):")
+    # print(f"  Running time: {heap_elapsed:.4f} seconds")
+    # if heap_path == dijkstra_path:
+    #     print("  Matches linear-scan Dijkstra result.")
+    # else:
+    #     print("  WARNING: differs from linear-scan Dijkstra result.")
+    # if heap_elapsed > 0 and dijkstra_elapsed > 0:
+    #     print(f"  Speedup vs. linear-scan: {dijkstra_elapsed / heap_elapsed:.2f}x")
+    # # ==========================================================================
+    # # END OPTIMIZATION COMPARISON block 
+    # # ==========================================================================
+
+    # print()
 
