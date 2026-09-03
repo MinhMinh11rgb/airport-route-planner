@@ -12,6 +12,11 @@ dataset. Two algorithms are provided:
 For each route, the program prints the flight path, number of flights,
 number of intermediate stops, total estimated distance, and running time.
 
+A heapq-based version of Dijkstra's algorithm is also included in main.py
+(dijkstra_shortest_distance_heap), but left commented out since it exists
+only for the optional optimisation comparison in the report  and is not part 
+of the core solution; uncomment it and the heapq import above it to rerun that comparison.
+
 
 Environment Setup
 ------------------

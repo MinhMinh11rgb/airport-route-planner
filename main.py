@@ -1,9 +1,11 @@
 import csv
-import heapq
 import math
 import time
-airportPath = "data/airports.dat"
-routePath = "data/routes.dat"
+# import heapq  # only needed if dijkstra_shortest_distance_heap below is uncommented
+airport_path = "data/airports.dat"
+route_path = "data/routes.dat"
+
+# Parses airports.dat into a dictionary keyed by IATA code.
 def load_airports(path):
     airports={}
     with open(path, mode="r", encoding="utf-8", newline="") as f:
@@ -14,11 +16,12 @@ def load_airports(path):
             name = row[1]
             country = row[3]
             latitude = float(row[6])
-            longtitude = float(row[7])
-            airports[iata] = {"name": name, "country": country, "lat": latitude, "long": longtitude}
+            longitude = float(row[7])
+            airports[iata] = {"name": name, "country": country, "lat": latitude, "long": longitude}
 
         return airports
 
+# Parses routes.dat into an adjacency list, dropping cases that reference an airport not present in the dataset.
 def load_routes(path, airports):
     graph = {}
     with open(path, mode="r", encoding="utf-8", newline="") as f:
@@ -33,23 +36,25 @@ def load_routes(path, airports):
     return graph
 
 
-def harvensine_distance(lat1,lon1,lat2,lon2):
+# Computes distance in km between two lat/long points using the Haversine formula.
+def haversine_distance(lat1,lon1,lat2,lon2):
     r = 6371 #earth radius in km
-    lat1Rad = math.radians(lat1)     
-    lat2Rad = math.radians(lat2)
-    lon1Rad = math.radians(lon1)
-    lon2Rad = math.radians(lon2)
+    lat1_rad = math.radians(lat1)
+    lat2_rad = math.radians(lat2)
+    lon1_rad = math.radians(lon1)
+    lon2_rad = math.radians(lon2)
 
-    delta_lat = lat2Rad - lat1Rad
-    delta_lon = lon2Rad - lon1Rad
+    delta_lat = lat2_rad - lat1_rad
+    delta_lon = lon2_rad - lon1_rad
 
-    a = math.sin(delta_lat/2) ** 2 + math.cos(lat1Rad) * math.cos(lat2Rad) * math.sin(delta_lon/2) ** 2
+    a = math.sin(delta_lat/2) ** 2 + math.cos(lat1_rad) * math.cos(lat2_rad) * math.sin(delta_lon/2) ** 2
     c =  2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
 
     distance = r * c
     return distance
 
 
+# Looks up two airports by IATA code and returns the Haversine distance between them.
 def distance_between(code1, code2, airports):
     a1 = airports[code1]
     a2 = airports[code2]
@@ -59,9 +64,10 @@ def distance_between(code1, code2, airports):
     lat2 = a2["lat"]
     lon2 = a2["long"]
 
-    return harvensine_distance(lat1, lon1, lat2, lon2)
+    return haversine_distance(lat1, lon1, lat2, lon2)
 
 
+# Finds the route with the fewest flights between source and destination using BFS.
 def bfs_min_stops(graph, source, destination):
     if source == destination:
         return [source]
@@ -85,6 +91,7 @@ def bfs_min_stops(graph, source, destination):
 
     return None
 
+# Finds the route with the lowest total distance between source and destination using Dijkstra's algorithm.
 def dijkstra_shortest_distance(graph, airports, source, destination):
     if source == destination:
         return [source]
@@ -125,48 +132,43 @@ def dijkstra_shortest_distance(graph, airports, source, destination):
     return reconstruct_path(parent, source , destination)
 
 
-# ==============================================================================
-# OPTIMIZATION COMPARISON (dev-only) - heapq-based Dijkstra vs. our linear-scan
-# Dijkstra. Delete or comment out this entire block before publishing.
-# ==============================================================================
+# Heapq-based version of dijkstra_shortest_distance, used only for the optional optimisation
+# comparison (see report Section 4.1) and not part of the core solution. Commented out here;
+# uncomment this function, the heapq import above, and the call block below it to rerun it.
+# def dijkstra_shortest_distance_heap(graph, airports, source, destination):
+#     if source == destination:
+#         return [source]
 
-def dijkstra_shortest_distance_heap(graph, airports, source, destination):
-    if source == destination:
-        return [source]
+#     distance = {source: 0}
+#     parent = {}
+#     visited = set()
+#     heap = [(0, source)]
 
-    distance = {source: 0}
-    parent = {}
-    visited = set()
-    heap = [(0, source)]
+#     while heap:
+#         dist_u, u = heapq.heappop(heap)
+#         if u in visited:
+#             continue
+#         visited.add(u)
 
-    while heap:
-        dist_u, u = heapq.heappop(heap)
-        if u in visited:
-            continue
-        visited.add(u)
+#         if u == destination:
+#             break
 
-        if u == destination:
-            break
+#         for neighbor in graph.get(u, set()):
+#             if neighbor in visited:
+#                 continue
+#             new_dist = dist_u + distance_between(u, neighbor, airports)
+#             if neighbor not in distance or new_dist < distance[neighbor]:
+#                 distance[neighbor] = new_dist
+#                 parent[neighbor] = u
+#                 heapq.heappush(heap, (new_dist, neighbor))
 
-        for neighbor in graph.get(u, set()):
-            if neighbor in visited:
-                continue
-            new_dist = dist_u + distance_between(u, neighbor, airports)
-            if neighbor not in distance or new_dist < distance[neighbor]:
-                distance[neighbor] = new_dist
-                parent[neighbor] = u
-                heapq.heappush(heap, (new_dist, neighbor))
+#     if destination not in distance:
+#         return None
 
-    if destination not in distance:
-        return None
-
-    return reconstruct_path(parent, source, destination)
-
-# ==============================================================================
-# END OPTIMIZATION COMPARISON block (function definition)
-# ==============================================================================
+#     return reconstruct_path(parent, source, destination)
 
 
+# Walks the parent pointers from destination back to source and reverses them into a path.
 def reconstruct_path(parent, source, destination):
     path = [destination]
     while path[-1] != source:
@@ -176,19 +178,15 @@ def reconstruct_path(parent, source, destination):
     return path
 
 
+# Sums the Haversine distance between each consecutive pair of airports in a path.
 def path_total_distance(path, airports):
     return sum(
         distance_between(path[i], path[i + 1], airports)
         for i in range(len(path) - 1)
     )
 
-    
-
-
-
-
-airports = load_airports(airportPath)
-graph = load_routes(routePath, airports)
+airports = load_airports(airport_path)
+graph = load_routes(route_path, airports)
 
 while True:
     source = input("Enter source airport code (or 'q' to quit):")
@@ -237,10 +235,6 @@ while True:
         print(f"  Total estimated distance: {dijkstra_total_distance:,.0f} km")
         print(f"  Running time: {dijkstra_elapsed:.4f} seconds")
 
-    # ==========================================================================
-    # OPTIMIZATION COMPARISON - heapq-based Dijkstra vs. our
-    # linear-scan Dijkstra above. Uncomment this block to test the comparison. 
-    # ==========================================================================
     # heap_start_time = time.perf_counter()
     # heap_path = dijkstra_shortest_distance_heap(graph, airports, source, destination)
     # heap_elapsed = time.perf_counter() - heap_start_time
@@ -253,9 +247,6 @@ while True:
     #     print("  WARNING: differs from linear-scan Dijkstra result.")
     # if heap_elapsed > 0 and dijkstra_elapsed > 0:
     #     print(f"  Speedup vs. linear-scan: {dijkstra_elapsed / heap_elapsed:.2f}x")
-    # # ==========================================================================
-    # # END OPTIMIZATION COMPARISON block 
-    # # ==========================================================================
 
-    # print()
+    print()
 
